@@ -9,6 +9,7 @@ const VendorJoinPage = () => {
     address: "",
     city: "",
     addhar_card: "",
+    password: "",
     addhar_front_image: null,
     aadhar_back_image: null,
   });
@@ -49,7 +50,6 @@ const VendorJoinPage = () => {
         <div>
           {/* Full Name */}
           <div className="mb-6">
-            {/* {JSON.stringify(vendorDetails)} */}
             <label htmlFor="name" className="block font-semibold mb-2">
               Full Name
             </label>
@@ -112,6 +112,22 @@ const VendorJoinPage = () => {
             />
           </div>
 
+          {/* Password Field ✅ */}
+          <div className="mb-6">
+            <label htmlFor="password" className="block font-semibold mb-2">
+              Password
+            </label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={vendorDetails.password}
+              onChange={handleChange}
+              className="w-full p-4 border rounded-lg"
+              placeholder="Create a strong password"
+            />
+          </div>
+
           {/* Address */}
           <div className="mb-6">
             <label htmlFor="address" className="block font-semibold mb-2">
@@ -153,7 +169,7 @@ const VendorJoinPage = () => {
               Aadhar Card (Front)
             </label>
             <input
-              type=""
+              type="file"
               id="addhar_front_image"
               name="addhar_front_image"
               onChange={handleChange}
@@ -171,7 +187,7 @@ const VendorJoinPage = () => {
               Aadhar Card (Back)
             </label>
             <input
-              type=""
+              type="file"
               id="aadhar_back_image"
               name="aadhar_back_image"
               onChange={handleChange}
@@ -185,9 +201,9 @@ const VendorJoinPage = () => {
             <button
               onClick={postData}
               type="button"
-              className="bg-gray-400 text-white py-3 px-6 rounded-lg font-semibold cursor-pointer"
+              className="bg-green-400 text-white py-3 px-6 rounded-lg font-semibold cursor-pointer"
             >
-              Form Data is Being Collected
+              Submite
             </button>
           </div>
         </div>

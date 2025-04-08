@@ -30,13 +30,34 @@ const HeroSection = () => {
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5, delay: 0.6 }}
-        className="mt-6 flex space-x-4"
+        className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4"
       >
-        <Link to="/vendorlogin" className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg shadow-lg transition">
+        <Link
+          to="/vendorlogin"
+          className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg shadow-lg transition"
+        >
           Vendors Join Kare
         </Link>
-        <Link to="/venders" className="px-6 py-3 bg-white hover:bg-gray-200 text-green-700 font-bold rounded-lg shadow-lg transition">
+
+        <Link
+          to="/venders"
+          className="px-6 py-3 bg-white hover:bg-gray-200 text-green-700 font-bold rounded-lg shadow-lg transition"
+        >
           Consumers Order Kare
+        </Link>
+
+        <Link
+          to="/vendor-auth"
+          className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg shadow-lg transition"
+        >
+          Vendor Login / Signup
+        </Link>
+
+        <Link
+          to="/consumer-auth"
+          className="px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-lg shadow-lg transition"
+        >
+          Consumer Login / Signup
         </Link>
       </motion.div>
     </section>
