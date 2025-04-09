@@ -1,5 +1,7 @@
 import axios from "axios";
 import React, { useState } from "react";
+import Header2 from "../components/Header2";
+
 
 const VendorJoinPage = () => {
   const [vendorDetails, setVendorDetails] = useState({
@@ -39,8 +41,9 @@ const VendorJoinPage = () => {
 
   return (
     <div className="bg-gradient-to-r from-green-100 to-blue-50 min-h-screen p-8">
-      <div className="flex items-center justify-center mb-10">
-        <img src="/image.png" alt="GoCart Logo" className="h-16 mr-4" />
+      <Header2></Header2>
+      <div className="flex items-center mt-4 justify-center mb-10">
+        
         <h2 className="text-4xl font-extrabold text-gray-900">
           🚀 Join as a Vendor
         </h2>

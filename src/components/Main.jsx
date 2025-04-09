@@ -33,10 +33,10 @@ const HeroSection = () => {
         className="mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 gap-4"
       >
         <Link
-          to="/vendorlogin"
+          to="/vendor-auth"
           className="px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg shadow-lg transition"
         >
-          Vendors Join Kare
+          Vendors Login
         </Link>
 
         <Link
@@ -47,10 +47,10 @@ const HeroSection = () => {
         </Link>
 
         <Link
-          to="/vendor-auth"
+          to="/venders"
           className="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg shadow-lg transition"
         >
-          Vendor Login / Signup
+         Order Items 
         </Link>
 
         <Link

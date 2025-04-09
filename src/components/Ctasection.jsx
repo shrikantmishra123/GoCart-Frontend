@@ -31,13 +31,13 @@ const CTASection = () => {
           transition={{ duration: 1.5 }}
         >
           <Link
-            to="/signup"
+            to="/vendor-auth"
             className="bg-yellow-400 text-green-900 font-semibold px-6 py-3 rounded-lg hover:bg-yellow-300 transition"
           >
             Join as Vendor
           </Link>
           <Link
-            to="/order"
+            to="/venders"
             className="bg-white text-green-700 font-semibold px-6 py-3 rounded-lg hover:bg-gray-100 transition"
           >
             Order Now

@@ -1,37 +1,96 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FaTrash, FaArrowLeft } from "react-icons/fa";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const CartPage = () => {
-  // 🛒 Initial Cart Items
-  const [cart, setCart] = useState([
-    { id: 1, name: "Banana", price: 30, quantity: 2, image: "https://dukaan.b-cdn.net/700x700/webp/projecteagle/images/f1892840-ac51-4f6d-8825-ce5b5f96ef8c.jpg" },
-    { id: 2, name: "Coriander Bunch", price: 18, quantity: 1, image: "/images/coriander.jpg" },
-  ]);
+  const [cart, setCart] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const navigate = useNavigate();
 
-  // ➕ Increase Quantity
+  useEffect(() => {
+    const consumerId = localStorage.getItem("consumer_id");
+    if (!consumerId) {
+      navigate("/consumer-auth");
+      return;
+    }
+
+    const storedCart = JSON.parse(localStorage.getItem("cart")) || [];
+    setCart(storedCart);
+  }, [navigate]);
+
+  const updateCart = (updatedCart) => {
+    setCart(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+  };
+
   const increaseQuantity = (id) => {
-    setCart(cart.map((item) => item.id === id ? { ...item, quantity: item.quantity + 1 } : item));
+    const updatedCart = cart.map((item) =>
+      item._id === id ? { ...item, quantity: item.quantity + 1 } : item
+    );
+    updateCart(updatedCart);
   };
 
-  // ➖ Decrease Quantity
   const decreaseQuantity = (id) => {
-    setCart(cart.map((item) =>
-      item.id === id ? { ...item, quantity: Math.max(1, item.quantity - 1) } : item
-    ));
+    const updatedCart = cart.map((item) =>
+      item._id === id
+        ? { ...item, quantity: Math.max(1, item.quantity - 1) }
+        : item
+    );
+    updateCart(updatedCart);
   };
 
-  // ❌ Remove Item from Cart
   const removeItem = (id) => {
-    setCart(cart.filter((item) => item.id !== id));
+    const updatedCart = cart.filter((item) => item._id !== id);
+    updateCart(updatedCart);
   };
 
-  // 💰 Calculate Total Price
-  const totalPrice = cart.reduce((total, item) => total + item.price * item.quantity, 0);
+  const totalPrice = cart.reduce(
+    (total, item) => total + item.price * item.quantity,
+    0
+  );
+
+  const handleCheckout = async () => {
+    const consumerId = JSON.parse(localStorage.getItem("consumer_id"));
+    const cartItems = JSON.parse(localStorage.getItem("cart")) || [];
+
+    if (cartItems.length === 0) {
+      alert("Your cart is empty.");
+      return;
+    }
+
+    const vendorId = cartItems[0].vendorId;
+
+    const orderData = {
+      consumerId,
+      vendorId,
+      products: cartItems.map((item) => ({
+        productId: item._id,
+        quantity: item.quantity,
+      })),
+      status: "pending",
+      totalPrice,
+    };
+
+    try {
+      setLoading(true);
+      const response = await axios.post("https://gocart-gqbi.onrender.com/orders", orderData);
+      console.log("Order placed:", response.data.data);
+
+      localStorage.removeItem("cart");
+      setCart([]);
+      alert("Order placed successfully!");
+      navigate("/cusord");
+    } catch (error) {
+      console.error("Order failed:", error);
+      alert("Failed to place order. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="bg-gray-100 min-h-screen p-4 md:p-6">
-      {/* 🔙 Back Button */}
       <Link to="/cusord" className="flex items-center text-green-600 hover:text-green-700 mb-4">
         <FaArrowLeft className="mr-2" /> Continue Shopping
       </Link>
@@ -42,32 +101,49 @@ const CartPage = () => {
         <p className="text-gray-600 text-center">Your cart is empty.</p>
       ) : (
         <>
-          {/* 🏷️ Cart Items */}
           <div className="bg-white p-4 md:p-6 rounded-lg shadow-md">
             {cart.map((item) => (
-              <div key={item.id} className="flex items-center justify-between border-b py-3">
+              <div key={item._id} className="flex items-center justify-between border-b py-3">
                 <img src={item.image} alt={item.name} className="w-16 h-16 object-cover rounded-md" />
                 <div className="flex-grow px-3">
                   <h3 className="font-semibold text-gray-800">{item.name}</h3>
                   <p className="text-green-600 font-bold">₹{item.price} x {item.quantity}</p>
                 </div>
                 <div className="flex items-center">
-                  <button onClick={() => decreaseQuantity(item.id)} className="px-3 py-1 bg-gray-300 text-gray-700 rounded-l">-</button>
+                  <button
+                    onClick={() => decreaseQuantity(item._id)}
+                    className="px-3 py-1 bg-gray-300 text-gray-700 rounded-l"
+                  >
+                    -
+                  </button>
                   <span className="px-3 py-1 bg-white border">{item.quantity}</span>
-                  <button onClick={() => increaseQuantity(item.id)} className="px-3 py-1 bg-gray-300 text-gray-700 rounded-r">+</button>
+                  <button
+                    onClick={() => increaseQuantity(item._id)}
+                    className="px-3 py-1 bg-gray-300 text-gray-700 rounded-r"
+                  >
+                    +
+                  </button>
                 </div>
-                <button onClick={() => removeItem(item.id)} className="ml-3 text-red-500 hover:text-red-700">
+                <button
+                  onClick={() => removeItem(item._id)}
+                  className="ml-3 text-red-500 hover:text-red-700"
+                >
                   <FaTrash />
                 </button>
               </div>
             ))}
           </div>
 
-          {/* 💰 Total & Checkout */}
           <div className="mt-4 p-4 md:p-6 bg-white rounded-lg shadow-md text-center">
             <h3 className="text-lg md:text-xl font-semibold text-gray-800">Total: ₹{totalPrice}</h3>
-            <button className="mt-3 w-full bg-green-600 text-white py-2 rounded-lg hover:bg-green-700">
-              Proceed to Checkout
+            <button
+              onClick={handleCheckout}
+              disabled={loading}
+              className={`mt-3 w-full py-2 rounded-lg text-white ${
+                loading ? "bg-gray-400 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+              }`}
+            >
+              {loading ? "Placing Order..." : "Proceed to Checkout"}
             </button>
           </div>
         </>

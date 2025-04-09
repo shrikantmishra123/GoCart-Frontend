@@ -2,10 +2,10 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import Header2 from "../components/Header2";
 
 const VendorLoginForm = () => {
   const navigate = useNavigate();
-
   const [formData, setFormData] = useState({
     mobile_number: "",
     password: "",
@@ -21,12 +21,9 @@ const VendorLoginForm = () => {
     axios
       .post("https://gocart-gqbi.onrender.com/vendors/login", formData)
       .then((res) => {
-        console.log(res);
-
-        // Save login data to localStorage
-
-        localStorage.setItem("vendor_id", JSON.stringify(res.data.data._id));
-
+        const vendor = res.data.data;
+        localStorage.setItem("vendor_id", JSON.stringify(vendor._id));
+        localStorage.setItem("vendor_mobile", vendor.mobile_number);
         alert("Login Successful!");
         navigate("/vendordashboard");
       })
@@ -37,7 +34,9 @@ const VendorLoginForm = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-40 p-10 bg-white rounded-lg shadow">
+    <div className="bg-gradient-to-r from-green-100 to-blue-50">   <Header2></Header2>
+    <div className="max-w-md mx-auto mt-40 p-10 bg-[#EAF7F9] rounded-lg shadow">
+    
       <h2 className="text-2xl font-bold mb-4 text-center text-green-600">
         Vendor Login
       </h2>
@@ -67,7 +66,14 @@ const VendorLoginForm = () => {
           Submit
         </button>
       </form>
-    </div>
+      <div className="mt-4 text-sm text-center text-gray-600">
+        Don’t have an account?
+        <button onClick={()=> navigate('/vendorlogin')}
+          className="text-green-700 font-medium hover:underline">
+          Sign up here
+        </button>
+      </div>
+    </div> </div>
   );
 };
 
