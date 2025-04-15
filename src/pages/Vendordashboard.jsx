@@ -1,7 +1,6 @@
-// src/pages/VendorDashboard.jsx
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { FaEdit, FaTrashAlt, FaPlusCircle, FaUserCircle, FaCheckCircle, FaBoxOpen } from "react-icons/fa";
+import { FaEdit, FaTrashAlt, FaPlusCircle, FaUserCircle, FaCheckCircle } from "react-icons/fa";
 import { IoSearch } from "react-icons/io5";
 import { Link } from "react-router-dom";
 
@@ -10,7 +9,7 @@ const VendorDashboard = () => {
   const [vendorData, setVendorData] = useState(null);
   const [productList, setProductList] = useState([]);
   const [orderList, setOrderList] = useState([]);
-  const [showOrders, setShowOrders] = useState(false);
+  const [orderFilter, setOrderFilter] = useState(null); // "pending" or "completed"
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [productDetails, setProductDetails] = useState({
     vendorId,
@@ -22,17 +21,84 @@ const VendorDashboard = () => {
     image: "",
   });
 
+  const [totalEarnings, setTotalEarnings] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
+
   useEffect(() => {
     if (vendorId) {
       axios.get(`https://gocart-gqbi.onrender.com/vendors/${vendorId}`)
         .then((res) => setVendorData(res.data.data))
         .catch((err) => console.error("Vendor fetch failed:", err));
-
+  
+      // Fetching products
       axios.get(`https://gocart-gqbi.onrender.com/products/${vendorId}`)
         .then((res) => setProductList(res.data.data))
         .catch((err) => console.error("Product fetch failed:", err));
+  
+      // Fetching orders to set initial pending and completed counts
+      axios.get("https://gocart-gqbi.onrender.com/orders")
+        .then((res) => {
+          const allOrders = res.data.data;
+          const vendorOrders = allOrders.filter(order => order.products.some(p => p.productId.vendorId === vendorId));
+  
+          // Calculate pending and completed orders
+          const pendingOrders = vendorOrders.filter(order => order.status === "pending");
+          const completedOrders = vendorOrders.filter(order => order.status === "completed");
+  
+          setOrderList(vendorOrders);
+          setPendingCount(pendingOrders.reduce((acc, order) => acc + order.products.length, 0));
+          setTotalEarnings(completedOrders.reduce((acc, order) => {
+            return acc + order.products.reduce((total, p) => total + (p.quantity * p.productId.price), 0);
+          }, 0));
+        })
+        .catch((err) => console.error("Order fetch failed:", err));
     }
   }, [vendorId]);
+  
+
+  const fetchOrders = (status) => {
+    axios.get("https://gocart-gqbi.onrender.com/orders")
+      .then((res) => {
+        const allOrders = res.data.data;
+        const vendorOrders = allOrders
+          .filter(order => order.status === status)
+          .map(order => {
+            const filteredProducts = order.products.filter(p => p.productId.vendorId === vendorId);
+            if (filteredProducts.length > 0) {
+              return {
+                ...order,
+                products: filteredProducts
+              };
+            }
+            return null;
+          })
+          .filter(order => order !== null);
+
+        setOrderList(vendorOrders);
+        setOrderFilter(status);
+
+        // Count total earnings or pending products
+        if (status === "completed") {
+          let earnings = 0;
+          vendorOrders.forEach(order => {
+            order.products.forEach(p => {
+              earnings += p.quantity * p.productId.price;
+            });
+          });
+          setTotalEarnings(earnings);
+        } else if (status === "pending") {
+          let total = 0;
+          vendorOrders.forEach(order => {
+            order.products.forEach(p => {
+              total += p.quantity;
+            });
+          });
+          setPendingCount(total);
+        }
+
+      })
+      .catch(err => console.error("Order fetch failed:", err));
+  };
 
   const toggleModal = () => setIsModalOpen(!isModalOpen);
 
@@ -71,18 +137,16 @@ const VendorDashboard = () => {
       .catch((err) => console.error("Delete failed:", err));
   };
 
-  const handleShowOrders = () => {
-    if (!showOrders) {
-      axios.get("https://gocart-gqbi.onrender.com/orders")
-        .then((res) => {
-          const vendorOrders = res.data.data.filter(order => order.vendorId === vendorId && order.status === "pending");
-          setOrderList(vendorOrders);
-          setShowOrders(true);
-        })
-        .catch(err => console.error("Order fetch failed:", err));
-    } else {
-      setShowOrders(false);
-    }
+  const updateOrderStatus = (orderId, newStatus) => {
+    axios.put(`https://gocart-gqbi.onrender.com/orders/${orderId}`, { status: newStatus })
+      .then(() => {
+        alert(`Order marked as ${newStatus}`);
+        setOrderList(orderList.filter(o => o._id !== orderId));
+      })
+      .catch((err) => {
+        console.error("Status update failed:", err);
+        alert("Failed to update order status.");
+      });
   };
 
   return (
@@ -108,21 +172,32 @@ const VendorDashboard = () => {
         <div><label>Address:</label> {vendorData?.address || 'N/A'}</div>
         <div><label>Owner Name:</label> {vendorData?.name || 'N/A'}</div>
         <div><label>Contact Number:</label> {vendorData?.mobile_number || 'N/A'}</div>
+        {orderFilter === "pending" && (
+          <div className="mt-2 text-sm text-red-600 font-semibold">
+            Total Pending Items: {pendingCount}
+          </div>
+        )}
       </div>
 
       {/* Metrics */}
       <div className="p-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div onClick={handleShowOrders} className="bg-white p-4 rounded shadow cursor-pointer hover:shadow-lg">
+        <div
+          onClick={() => fetchOrders("pending")}
+          className={`bg-white p-4 rounded shadow cursor-pointer hover:shadow-lg ${orderFilter === "pending" ? "border border-red-500" : ""}`}
+        >
           <h4 className="text-lg mb-2">Pending Orders</h4>
-          <div className="text-red-500 text-2xl font-bold">{vendorData?.pendingOrders || 0}</div>
+          <div className="text-red-500 text-2xl font-bold">{orderFilter === "pending" ? orderList.length : 0}</div>
         </div>
-        <div className="bg-white p-4 rounded shadow">
+        <div
+          onClick={() => fetchOrders("completed")}
+          className={`bg-white p-4 rounded shadow cursor-pointer hover:shadow-lg ${orderFilter === "completed" ? "border border-green-500" : ""}`}
+        >
           <h4 className="text-lg mb-2">Completed Orders</h4>
-          <div className="text-green-500 text-2xl font-bold">{vendorData?.completedOrders || 0}</div>
+          <div className="text-green-500 text-2xl font-bold">{orderFilter === "completed" ? orderList.length : (vendorData?.completedOrders || 0)}</div>
         </div>
         <div className="bg-white p-4 rounded shadow">
           <h4 className="text-lg mb-2">Total Earnings</h4>
-          <div className="text-blue-500 text-2xl font-bold">₹{vendorData?.earnings || 0}</div>
+          <div className="text-blue-500 text-2xl font-bold">₹{orderFilter === "completed" ? totalEarnings : (vendorData?.earnings || 0)}</div>
         </div>
         <div className="bg-white p-4 rounded shadow text-center">
           <h4 className="text-lg mb-2">Payment Status</h4>
@@ -134,9 +209,9 @@ const VendorDashboard = () => {
       </div>
 
       {/* Orders List */}
-      {showOrders && (
+      {orderFilter && (
         <div className="bg-white shadow-md rounded p-6 my-4">
-          <h3 className="text-xl font-semibold mb-4">Pending Orders</h3>
+          <h3 className="text-xl font-semibold mb-4 capitalize">{orderFilter} Orders</h3>
           {orderList.length ? (
             <table className="w-full table-auto text-left border">
               <thead>
@@ -145,23 +220,42 @@ const VendorDashboard = () => {
                   <th className="p-2 border">Product Name</th>
                   <th className="p-2 border">Quantity</th>
                   <th className="p-2 border">Amount</th>
-                  <th className="p-2 border">Status</th>
+                  {orderFilter === "pending" && <th className="p-2 border">Actions</th>}
                 </tr>
               </thead>
               <tbody>
-                {orderList.map((order, index) => (
-                  <tr key={order._id}>
-                    <td className="p-2 border">{index + 1}</td>
-                    <td className="p-2 border">{order.productName}</td>
-                    <td className="p-2 border">{order.quantity}</td>
-                    <td className="p-2 border">₹{order.totalPrice}</td>
-                    <td className="p-2 border text-red-600 capitalize">{order.status}</td>
-                  </tr>
-                ))}
+                {orderList.map((order, index) =>
+                  order.products.map((i, idx) => (
+                    <tr key={`${order._id}-${idx}`}>
+                      <td className="p-2 border">{index + 1}.{idx + 1}</td>
+                      <td className="p-2 border">{i.productId.name}</td>
+                      <td className="p-2 border">{i.quantity}</td>
+                      <td className="p-2 border">₹{i.productId?.price * i.quantity}</td>
+                      {orderFilter === "pending" && (
+                        <td className="p-2 border text-red-600 capitalize">
+                          <div className="flex space-x-2">
+                            <button
+                              onClick={() => updateOrderStatus(order._id, "completed")}
+                              className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+                            >
+                              Complete
+                            </button>
+                            <button
+                              onClick={() => updateOrderStatus(order._id, "cancelled")}
+                              className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </td>
+                      )}
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           ) : (
-            <p className="text-gray-500">No pending orders found.</p>
+            <p className="text-gray-500">No {orderFilter} orders found.</p>
           )}
         </div>
       )}

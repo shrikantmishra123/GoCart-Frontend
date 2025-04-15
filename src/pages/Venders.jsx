@@ -62,12 +62,7 @@ const VendorsListPage = () => {
                 <FaMapMarkerAlt className="mr-1 text-red-500" /> {vendor.address}
               </p>
 
-              {/* ⭐ Ratings (static for now) */}
-              <div className="flex items-center mt-2">
-                <FaStar className="text-yellow-500" />
-                <span className="text-gray-800 font-semibold ml-1">4.5</span>
-              </div>
-
+       
               {/* Category (static) */}
               <div className="flex gap-2">
                 <span className="mt-2 text-sm text-white bg-blue-500 px-3 py-1 rounded-full font-semibold">{vendor.name}</span>
@@ -77,7 +72,7 @@ const VendorsListPage = () => {
               
               <button
                 onClick={() => {localStorage.setItem("vendor_id", JSON.stringify(vendor._id));navigate(`/cusord?vendorId=${vendor._id}`)}}
-                className="mt-6 block m-3  bg-green-600 text-white text-center py-3 rounded-lg font-semibold hover:bg-green-700 transition duration-300 transform hover:scale-105"
+                className="mt-6 flex items-center justify-center  bg-green-600 text-white text-center py-3 px-3 rounded-lg font-semibold hover:bg-green-700 transition duration-300 transform hover:scale-105"
               >
                 🛒 Visit Shop
               </button>

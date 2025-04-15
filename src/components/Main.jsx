@@ -54,7 +54,7 @@ const HeroSection = () => {
         </Link>
 
         <Link
-          to="/consumer-auth"
+          to="/consumer-login"
           className="px-6 py-3 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-lg shadow-lg transition"
         >
           Consumer Login / Signup
